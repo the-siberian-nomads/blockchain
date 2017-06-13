@@ -1,0 +1,23 @@
+{
+  "name": "blockchain",
+  "version": "1.0.0",
+  "description": "our first implementation of blockchain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/priqb/blockchain.git"
+  },
+  "author": "priQB, noGju",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/priqb/blockchain/issues"
+  },
+  "homepage": "https://github.com/priqb/blockchain#readme",
+  "dependencies": {
+    "node-rsa": "^0.4.2",
+    "promise": "^7.1.1"
+  }
+}
