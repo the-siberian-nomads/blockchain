@@ -18,6 +18,7 @@
   "homepage": "https://github.com/priqb/blockchain#readme",
   "dependencies": {
     "node-rsa": "^0.4.2",
-    "promise": "^7.1.1"
+    "promise": "^7.1.1",
+    "sha256": "^0.2.0"
   }
 }
