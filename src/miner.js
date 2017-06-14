@@ -3,12 +3,14 @@ const block = require('./block')
 const net = require('net')
 const utils = require('./util')
 const transactions = require('./transaction')
-//pool of transactions
-pool = [];
-blockchain = [];
-transactionsMap = {};
 
-function miner(port){
+//pool of transactions
+var pool = [];
+var blockchain = [];
+var transactionsMap = {};
+var keypair = transactions.generateKeyPair();
+
+function miner(port) {
   net.createServer((sock) => {
 
     sock.on('data',function(data){
@@ -35,10 +37,10 @@ function addTransactionsToBlock(){
 }
 
 function addTransaction(transaction){
-  return unblock().then(() => {
+  return utils.unblock().then(() => {
     if(transactions.verify(transaction,transactionsMap,blockchain[blockchain.length-1])){
       transactions.addToMap(transaction,transactionsMap);
-      blocks.addTransaction(blockchain[blockchain.length-1],transaction);
+      block.addTransaction(blockchain[blockchain.length-1],transaction);
     }
   })
 }
@@ -57,15 +59,30 @@ function checkIfGenesis(){
   });
 }
 
+// Add a new block onto the end of the current chain and push a new coin into it.
+function pushNewBlock() {
+    blockchain.push( block.createFrom(blockchain[blockchain.length - 1]) );
+    pool.push(transactions.create(
+        keypair.public,
+        keypair.private,
+        [],
+        [{ owner_public_key: keypair.public, value: 1.0 }],
+        transactions.TYPES.NEW_COIN
+    ));
+}
+
 function computeHash(){
   return new Promise(function(resolve, reject) {
     blockchain[blockchain.length-1].nonce++;
     if(block.computeHash(blockchain[blockchain.length-1]).startsWith("000")){
       //broadcast
-      blockchain.push(block.createFrom(blockchain[blockchain.length -1]))
-      //add new block
+
+      pushNewBlock();
+
+      console.log("Current state of chain:");
       console.log(blockchain);
-      console.log(block.getVerificationMetadata(blockchain).valid);
+      console.log("Is chain valid: " + block.getVerificationMetadata(blockchain).valid);
+      console.log();
     }
     resolve()
   });
