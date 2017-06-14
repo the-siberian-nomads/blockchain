@@ -1,121 +1,161 @@
+const Transaction = require('./transaction')
 const Promise = require('promise')
-const block = require('./block')
+const Block = require('./block')
+const Util = require('./util')
 const net = require('net')
-const utils = require('./util')
-const transactions = require('./transaction')
 
-//pool of transactions
-var pool = [];
-var blockchain = [];
-var transactionsMap = {};
-var keypair = transactions.generateKeyPair();
+function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
+    this.transaction_pool = [];
+    this.transaction_map = {};
+    this.blockchain = [];
+    this.port = port;
 
-function miner(port) {
-  var server = net.createServer((sock) => {
-    sock.on('data',function(data){
-        data = JSON.parse(data.toString('utf8'));
-        switch(data.type) {
-          case "transaction" : pool.add(data.data); break;
-          case "blockFinished" :
-            if(data.chain == null){
-              break;
+    this.miner_public_key = miner_public_key;
+    this.miner_private_key = miner_private_key;
+    this.owner_public_key = owner_public_key;
+
+    this.flushTransactionPool = flushTransactionPool.bind(this);
+    this.addTransaction = addTransaction.bind(this);
+    this.createGenesisBlock = createGenesisBlock.bind(this);
+    this.createGenesisIfNeeded = createGenesisIfNeeded.bind(this);
+    this.createNewCoin = createNewCoin.bind(this);
+    this.latestBlock = latestBlock.bind(this);
+    this.pushNewBlock = pushNewBlock.bind(this);
+    this.computeHash = computeHash.bind(this);
+    this.start = start.bind(this);
+    this.main = main.bind(this);
+
+    this.server = net.createServer((socket) => {
+        socket.on('data', function(data) {
+            data = JSON.parse(data.toString('utf8'));
+
+            // TODO move these all out to a messages module
+            switch(data.type) {
+                case "broadcast_transaction":
+                    pool.add(data.data);
+                    break;
+
+                case "broadcast_block" :
+                    if (data.chain == null)
+                        break;
+
+                    // let newChain = data.chain;
+                    // if(newChain.length > data.chain){
+                    //     if(block.getVerificationMetadata(newChain).valid){
+                    //         newChain[blockchain.length].map(i => (pool.add(i)));
+                    //         blockchain = newChain;
+                    //     }
+                    // }
+
+                    break;
+                case "start_mining":
+                    break;
             }
-            let newChain = data.chain;
-            if(newChain.length > data.chain){
-              if(block.getVerificationMetadata(newChain).valid){
-                newChain[blockchain.length].map(i => (pool.add(i)));
-                blockchain = newChain;
-              }
+        })
+
+        sock.on('close', function(data) {
+            console.log("Socket closed.")
+        })
+    });
+}
+
+// Start up the miner's main loop and TCP server.
+function start() {
+    this.server.listen(this.port, '127.0.0.1');
+
+    this.main();
+}
+
+// Add all valid transactions to blockchain, clear the transaction pool.
+function flushTransactionPool() {
+    var transaction_promises = this.transaction_pool.map(this.addTransaction);
+
+    this.transaction_pool = [];
+    return Util.waitForAll(transaction_promises);
+}
+
+function addTransaction(transaction) {
+    return Util
+        .unblock()
+        .then(() => {
+            if (Transaction.verify(transaction, this.transaction_map, this.latestBlock())) {
+                // TODO this should be moved to Block.addTransaction.
+                Transaction.addToMap(transaction, this.transaction_map);
+
+                Block.addTransaction(this.latestBlock(), transaction);
             }
-            break;
-          case "startmining" : mainloop();
-        }
-    })
-
-    sock.on('close', function(data) {
-        console.log("closed")
-    })
-  })
-
-  server.listen(11111, 'localhost')
+        });
 }
 
-function addTransactionsToBlock(){
-    var promisesThing = pool.map((transaction) => addTransaction(transaction))
-    pool = []
-    return utils.waitForAll(promisesThing);
+// Create the genesis block and reset state.
+function createGenesisBlock() {
+    this.blockchain = [ Block.create("genesis") ];
+    this.transaction_map = {};
 }
 
-function addTransaction(transaction){
-  return utils.unblock().then(() => {
-    if(transactions.verify(transaction,transactionsMap,blockchain[blockchain.length-1])){
-      transactions.addToMap(transaction,transactionsMap);
-      block.addTransaction(blockchain[blockchain.length-1],transaction);
-    }
-  })
+// We only need to create a genesis block if there is nothing in the blockchain.
+function createGenesisIfNeeded() {
+    return new Promise((resolve, reject) => {
+        if (this.blockchain.length == 0)
+            this.createGenesisBlock();
+
+        return resolve();
+    });
 }
 
-function createGenesisBlock(){
-  blockchain = [ block.create("genesis") ];
-  transactionsMap = {};
+// Create a new coin transaction for new blocks.
+function createNewCoin() {
+    return Transaction.create(
+        this.miner_public_key,
+        this.miner_private_key,
+        [],
+        [{ owner_public_key: this.miner_public_key, value: 1.0 }],
+        Transaction.TYPES.NEW_COIN
+    );
 }
 
-function checkIfGenesis(){
-  return new Promise(function(resolve, reject) {
-    if(blockchain.length == 0){
-      createGenesisBlock();
-    }
-    resolve();
-  });
+// Get latest block in the blockchain, assuming it's of non-zero length.
+function latestBlock() {
+    return this.blockchain[ this.blockchain.length - 1 ];
 }
 
 // Add a new block onto the end of the current chain and push a new coin into it.
 function pushNewBlock() {
-    blockchain.push( block.createFrom(blockchain[blockchain.length - 1]) );
-    pool.push(transactions.create(
-        keypair.public,
-        keypair.private,
-        [],
-        [{ owner_public_key: keypair.public, value: 1.0 }],
-        transactions.TYPES.NEW_COIN
-    ));
+    this.blockchain.push( Block.createFrom(this.latestBlock()) );
+
+    this.transaction_pool.push( this.createNewCoin() );
 }
 
+// Run hash computation as part of the traditional bitcoin mining operation.
 function computeHash(){
-  return new Promise(function(resolve, reject) {
-    blockchain[blockchain.length-1].nonce++;
-    if(block.computeHash(blockchain[blockchain.length-1]).startsWith("000")){
-      //broadcast
+    return new Promise((resolve, reject) => {
+        this.latestBlock().nonce++;
 
-      pushNewBlock();
+        if (Block.computeHash(this.latestBlock()).startsWith("000")) {
+            // TODO broadcast the new block.
 
-      console.log("Current state of chain:");
-      console.log(blockchain);
-      console.log("Is chain valid: " + block.getVerificationMetadata(blockchain).valid);
-      console.log();
-    }
-    resolve()
-  });
+            this.pushNewBlock();
+
+            console.log("Current state of chain:");
+            console.log(this.blockchain.map(Block.toString).join('\n'));
+            console.log("Is chain valid: " + Block.getVerificationMetadata(this.blockchain).valid);
+            console.log();
+        }
+
+        return resolve()
+    });
 
 }
 
-function mainloop(){
-  // console.log(blockchain);
-  //add as many transactions to block as it can from the pool
-  return new Promise
-    .resolve()
-    .then(checkIfGenesis)
-    .then(addTransactionsToBlock)
-    .then(computeHash)
-    .then(utils.unblock)
-    .then(mainloop)
-    .catch((error) => console.error(error))
+// Main miner loop - constantly running.
+function main() {
+    return Util
+        .unblock()
+        .then(this.createGenesisIfNeeded)
+        .then(this.flushTransactionPool)
+        .then(this.computeHash)
+        .then(this.main)
+        .catch((error) => console.error(error))
 }
 
-function getMessage(miner){
-}
-
-module.exports = {
-    miner: miner,
-  mainloop : mainloop
-}
+module.exports = Miner;

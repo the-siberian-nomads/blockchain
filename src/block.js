@@ -15,9 +15,8 @@ function createFrom(block, data, nonce) {
     return create(computeHash(block), data, nonce);
 }
 
-function print(block){
-    console.log("Previous hash : " + block.hash);
-    console.log("Data : " + block.data);
+function toString(block) {
+    return block.hash + " : " + block.data.length + " transactions : " + block.nonce;
 }
 
 // Push a transaction to the block's transaction chain.
@@ -57,7 +56,7 @@ function getVerificationMetadata(blocks) {
 }
 
 module.exports = {
-    print : print,
+    toString : toString,
     create: create,
     createFrom: createFrom,
     computeHash: computeHash,
