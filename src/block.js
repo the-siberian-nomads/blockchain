@@ -1,17 +1,29 @@
 //block structure
-require('sha256')
+const sha = require('sha256')
+
+function addTransaction(hash,transaction){
+  hash.data.push(transaction);
+  return hash;
+}
+
+function computeHash(hash,nonce){
+  return sha.x2(nonce + hash.data + hash.hash);
+}
 
 function block(hash){
-  data = []
-  hash = null;
-
-  function addTransaction(transaction){
-    data.push(transaction);
+  return {
+    data: [],
+    hash: hash
   }
+}
 
-  function computeHash(nonce){
-    return sha256({nonce,data,hash});
-  }
-
-
+function printBlock(block){
+  console.log("previous hash : " + block.hash);
+  console.log("data : " + block.data);
+}
+module.exports = {
+  block : block,
+  computeHash : computeHash,
+  addTransaction : addTransaction,
+  printBlock : printBlock
 }
