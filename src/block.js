@@ -6,8 +6,8 @@ function addTransaction(hash,transaction){
   return hash;
 }
 
-function computeHash(hash,nonce){
-  return sha.x2(nonce + hash.data + hash.hash);
+function computeHash(block,nonce){
+  return sha.x2(nonce + block.data + block.hash);
 }
 
 function block(hash){
