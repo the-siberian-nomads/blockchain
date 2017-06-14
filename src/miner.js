@@ -11,10 +11,11 @@ var transactionsMap = {};
 var keypair = transactions.generateKeyPair();
 
 function miner(port) {
-  net.createServer((sock) => {
+  var server = net.createServer((sock) => {
     sock.on('data',function(data){
-        sock.write(data);
-        switch(data.type){
+        data = JSON.parse(data.toString('utf8'));
+
+        switch(data.type) {
           case "transaction" : pool.add(data); break;
           case "blockFinished" : let newChain = data.chain;
                                 if(newChain.length > data.chain){
@@ -32,6 +33,8 @@ function miner(port) {
         console.log("closed")
     })
   })
+
+  server.listen(11111, 'localhost')
 }
 
 function addTransactionsToBlock(){
@@ -110,5 +113,6 @@ function getMessage(miner){
 }
 
 module.exports = {
+    miner: miner,
   mainloop : mainloop
 }

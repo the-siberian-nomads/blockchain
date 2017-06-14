@@ -5,4 +5,4 @@ var Promise    = require('promise');
 var miner      = require('./src/miner')
 console.log("Nothing to see here.");
 
-miner.mainloop();
+miner.miner();
