@@ -1,4 +1,5 @@
 var Transaction = require('../src/transaction');
+var Block = require('../src/block');
 var keypairs = require('./keypairs');
 var assert = require('assert');
 
@@ -45,6 +46,20 @@ describe('transaction.js', () => {
 
             transaction.signature = '';
             assert.notDeepEqual(transaction, goodNewCoin);
+        });
+    });
+
+    describe('#equal()', () => {
+        it('should return true for equal transactions', () => {
+            var transaction = Transaction.clone(goodStandard);
+            assert.ok(Transaction.equal(transaction, goodStandard));
+        });
+
+        it('should return false for inequal transactions', () => {
+            var transaction = Transaction.clone(goodStandard);
+            transaction.type = Transaction.TYPES.NEW_COIN;
+
+            assert.ok(!Transaction.equal(transaction, goodStandard));
         });
     });
 
@@ -144,9 +159,43 @@ describe('transaction.js', () => {
         });
     });
 
+    describe('#isFirstNewCoin()', () => {
+        it('should return true for no new coins yet', () => {
+            var block = Block.create('HASH');
+
+            assert.ok(Transaction.isFirstNewCoin(goodNewCoin, block));
+        });
+
+        it('should return true for only new coin', () => {
+            var block = Block.create('HASH');
+            Block.addTransaction(block, goodNewCoin);
+
+            assert.ok(Transaction.isFirstNewCoin(goodNewCoin, block));
+        });
+
+        it('should return false for multiple new coins', () => {
+            var block = Block.create('HASH');
+            Block.addTransaction(block, goodNewCoin)
+            Block.addTransaction(block, goodNewCoin)
+
+            assert.ok(!Transaction.isFirstNewCoin(goodNewCoin, block));
+        });
+
+        it('should return false for a different new coin', () => {
+            var block = Block.create('HASH');
+            var transaction = Transaction.clone(goodNewCoin);
+            transaction.sender_public_key = 'DIFFERENT';
+            Block.addTransaction(block, transaction);
+
+            assert.ok(!Transaction.isFirstNewCoin(goodNewCoin, block));
+        });
+    });
+
     describe('#verify()', () => {
         it('should return true for good coins', () => {
-            assert.ok(Transaction.verify(goodNewCoin, transactionMap, /*TODO test block*/ {}));
+            var block = Block.create('HASH');
+
+            assert.ok(Transaction.verify(goodNewCoin, transactionMap, block));
             assert.ok(!Transaction.verify(goodStandard, transactionMap));
 
             Transaction.addToMap(goodNewCoin, transactionMap);

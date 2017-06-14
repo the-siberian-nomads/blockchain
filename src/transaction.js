@@ -47,6 +47,24 @@ function clone(transaction) {
     return deepcopy(transaction);
 }
 
+function equal(t1, t2) {
+    if (t1.type != t2.type) return false;
+    if (t1.signature != t2.signature) return false;
+    if (t1.sender_public_key != t2.sender_public_key) return false;
+
+    if (t1.inputs.length != t2.inputs.length) return false;
+    for (var i = 0; i < t1.inputs.length; i++)
+        if (t1.inputs[i] != t2.inputs[i]) return false;
+
+    if (t2.outputs.length != t2.outputs.length) return false;
+    for (var i = 0; i < t2.outputs.length; i++) {
+        if (t1.outputs[i].owner_public_key != t2.outputs[i].owner_public_key) return false;
+        if (t1.outputs[i].value != t2.outputs[i].value) return false;
+    }
+
+    return true;
+}
+
 function getOutputValue(transaction) {
     var total = 0.0;
     transaction.outputs.forEach((output) => {
@@ -125,6 +143,22 @@ function hasOwnedInputs(transaction, transaction_map) {
     return inputs_owned;
 }
 
+// Is the given new coin transaction the only one in it's contained block?
+function isFirstNewCoin(transaction, block_context) {
+    var new_coin_count = 0;
+    for (var i = 0; i < block_context.data.length; i++) {
+        if (block_context.data[i].type == TYPES.NEW_COIN) {
+            if (!equal(block_context.data[i], transaction))
+                return false;
+
+            new_coin_count++;
+        }
+    }
+
+    // There should be either exactly one or no new coin transactions in the chain yet.
+    return new_coin_count < 2;
+}
+
 // Given a map of transaction signatures to transactions, verify the given transaction is valid.
 function verify(transaction, transaction_map, block_context) {
     // Every transaction has to pass these checks universally.
@@ -145,7 +179,8 @@ function verify(transaction, transaction_map, block_context) {
 
         case TYPES.NEW_COIN:
             if (!block_context) return false;
-            // TODO VERIFICATION FOR THESE
+            if (!isFirstNewCoin(transaction, block_context)) return false;
+
             break;
     }
 
@@ -170,16 +205,32 @@ function addToMap(transaction, transaction_map) {
     });
 }
 
-// TODO block support.
-// Given a chain of transactions, verifies each and construct transaction map.
-function verifyChain(transactions) {
-    // TODO
+// Given a blockchain of transactions, verifies each and construct transaction map.
+function getVerificationMetadata(chain) {
+    var transaction_map = {};
+
+    for (var i = 0; i < chain.length; i++) {
+        for (var j = 0; j < chain[i].data.length; j++) {
+            var transaction = chain[i].data[j];
+
+            if (!verify(transaction, transaction_map, chain[i]))
+                return { valid: false };
+
+            addToMap(transaction, transaction_map);
+        }
+    }
+
+    return {
+        valid: true,
+        transaction_map: transaction_map
+    }
 }
 
 module.exports = {
     generateKeyPair: generateKeyPair,
     create: create,
     clone: clone,
+    equal: equal,
     verify: verify,
     addToMap: addToMap,
 
@@ -190,6 +241,8 @@ module.exports = {
     hasDuplicateOutputs: hasDuplicateOutputs,
     hasExistingInputs: hasExistingInputs,
     hasOwnedInputs: hasOwnedInputs,
+    isFirstNewCoin: isFirstNewCoin,
 
+    getVerificationMetadata: getVerificationMetadata,
     TYPES: TYPES
 }

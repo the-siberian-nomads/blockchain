@@ -1,27 +1,47 @@
 var assert = require('assert');
-let block = require('../src/block')
+let Block = require('../src/block')
 
 describe('block.js', () => {
-    describe('#block()', () => {
-        it("adds previous hash to block", () => {
-            let b = block.block("hash is added");
-            assert.equal(b.hash,"hash is added");
+    describe('#create()', () => {
+        it('adds correct hash to block', () => {
+            let b = Block.create('HASH');
+
+            assert.equal(b.hash,"HASH");
+        });
+    });
+
+    describe('#createFrom()', () => {
+        it('adds correct hash to block', () => {
+            let b = Block.create('HASH');
+            let b2 = Block.createFrom(b);
+
+            assert.equal(Block.computeHash(b), b2.hash);
         });
     });
 
     describe('#addTransaction()', () => {
         it("adds new transaction", () => {
-            let b = block.block("hash is added");
-            block.addTransaction(b, "first transaction");
+            let b = Block.create("hash is added");
+            Block.addTransaction(b, "first transaction");
 
             assert.deepEqual(b.data, ["first transaction"]);
         });
 
         it("computes hash with nonce", () => {
-            let b = block.block("hash is added");
-            block.addTransaction(b, "first transaction");
+            let b = Block.create("hash is added");
+            Block.addTransaction(b, "first transaction");
 
-            assert.equal(block.computeHash("hello",b).length, 64);
+            assert.equal(Block.computeHash("hello",b).length, 64);
         });
+    });
+});
+
+describe('#getVerificationMetadata()', () => {
+    it('returns valid metadata for good blockchain', () => {
+        let b1 = Block.create('HASH');
+        let b2 = Block.createFrom(b1);
+        let b3 = Block.createFrom(b2);
+
+        assert.ok(Block.getVerificationMetadata([b1, b2, b3]).valid);
     });
 });
