@@ -1,9 +1,76 @@
+var Transaction = require('../src/transaction');
+var keypairs = require('./keypairs');
 var assert = require('assert');
 
-describe('Todo', () => {
-    describe('#test1()', () => {
-        it("should say 1=1", () => {
-            assert.equal(1, 1);
+describe('transaction.js', () => {
+    var sender = keypairs.sender;
+    var owner = keypairs.owner;
+
+    var goodNewCoin;
+    function initGoodNewCoin() {
+        goodNewCoin = Transaction.create(
+            sender.public,
+            sender.private,
+            [],
+            [{ owner_public_key: sender.public, value: 1.0 }],
+            Transaction.TYPES.NEW_COIN
+        );
+    }
+
+    var goodStandard;
+    function initGoodStandard() {
+        goodStandard = Transaction.create(
+            sender.public,
+            sender.private,
+            [goodNewCoin.signature],
+            [
+                { owner_public_key: owner.public, value: 0.5},
+                { owner_public_key: sender.public, value: 0.5}
+            ],
+            Transaction.TYPES.STANDARD
+        );
+    }
+
+    before(() => {
+        initGoodNewCoin();
+        initGoodStandard();
+
+        transactionMap = {};
+    });
+
+    describe('#clone()', () => {
+        it('should clone a transaction successfully', () => {
+            var transaction = Transaction.clone(goodNewCoin);
+            assert.deepEqual(transaction, goodNewCoin);
+
+            transaction.signature = '';
+            assert.notDeepEqual(transaction, goodNewCoin);
+        });
+    });
+
+/**getInputValue: getInputValue,
+getOutputValue: getOutputValue,
+hasCorrectFields: hasCorrectFields,
+hasValidSignature: hasValidSignature,
+hasDuplicateOutputs: hasDuplicateOutputs,
+hasExistingInputs: hasExistingInputs,
+hasOwnedInputs: hasOwnedInputs,**/
+
+    describe('#getInputValue()', () => {
+        it('should get the correct input value', () => {
+            Transaction.addToMap(goodNewCoin, transactionMap);
+            Transaction.addToMap(goodStandard, transactionMap);
+            console.log(transactionMap);
+
+            assert.equal(1.0, Transaction.getInputValue(goodStandard, transactionMap));
+            assert.equal(0.0, Transaction.getInputValue(goodNewCoin, transactionMap));
+        });
+    });
+
+    describe('#getOutputValue()', () => {
+        it('should get the correct output value', () => {
+            assert.equal(1.0, Transaction.getOutputValue(goodStandard));
+            assert.equal(1.0, Transaction.getOutputValue(goodNewCoin));
         });
     });
 });
