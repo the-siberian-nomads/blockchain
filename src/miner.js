@@ -12,15 +12,19 @@ var keypair = transactions.generateKeyPair();
 
 function miner(port) {
   net.createServer((sock) => {
-
     sock.on('data',function(data){
         sock.write(data);
         switch(data.type){
           case "transaction" : pool.add(data); break;
-          case "blockFinished" : //recieve entire chain
-                                 //check valid (length and transactions/hash)
-                                 //add all transactions in current block back into transaction
-                                 //set current block
+          case "blockFinished" : let newChain = data.chain;
+                                if(newChain.length > data.chain){
+                                  if(block.getVerificationMetadata(newChain).valid){
+                                    newChain[blockchain.length].map(i => (pool.add(i)));
+                                    blockchain = newChain;
+                                  }
+                                }
+                                break;
+          case: "startmining" : mainloop();
         }
     })
 
