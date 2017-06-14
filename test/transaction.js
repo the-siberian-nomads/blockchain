@@ -31,11 +31,7 @@ describe('transaction.js', () => {
         );
     }
 
-    var wrongFields = {
-        this: 0, is: 0, not: 0, a: 0, coin: 0
-    }
-
-    before(() => {
+    beforeEach(() => {
         initGoodNewCoin();
         initGoodStandard();
 
@@ -51,14 +47,6 @@ describe('transaction.js', () => {
             assert.notDeepEqual(transaction, goodNewCoin);
         });
     });
-
-/**getInputValue: getInputValue,
-getOutputValue: getOutputValue,
-hasCorrectFields: hasCorrectFields,
-hasValidSignature: hasValidSignature,
-hasDuplicateOutputs: hasDuplicateOutputs,
-hasExistingInputs: hasExistingInputs,
-hasOwnedInputs: hasOwnedInputs,**/
 
     describe('#getInputValue()', () => {
         it('should get the correct input value', () => {
@@ -84,6 +72,8 @@ hasOwnedInputs: hasOwnedInputs,**/
         });
 
         it('should return false for bad coins', () => {
+            var wrongFields = { this: 0, is: 0, not: 0, a: 0, coin: 0 };
+
             assert.ok(!Transaction.hasCorrectFields(wrongFields));
         });
     });
@@ -97,8 +87,70 @@ hasOwnedInputs: hasOwnedInputs,**/
         it ('should return false for bad coins', () => {
             var badSignature = Transaction.clone(goodStandard);
             badSignature.signature = goodNewCoin.signature;
-            
+
             assert.ok(!Transaction.hasValidSignature(badSignature));
         });
-    })
+    });
+
+    describe('#hasDuplicateOutputs()', () => {
+        it('should return false for good coins', () => {
+            assert.ok(!Transaction.hasDuplicateOutputs(goodStandard));
+            assert.ok(!Transaction.hasDuplicateOutputs(goodNewCoin));
+        });
+
+        it('should return true for bad coins', () => {
+            var duplicateOutputs = Transaction.clone(goodStandard);
+            duplicateOutputs.outputs.forEach(output => output.owner_public_key = goodStandard.sender_public_key);
+
+            assert.ok(Transaction.hasDuplicateOutputs(duplicateOutputs));
+        });
+    });
+
+    describe('#hasExistingInputs()', () => {
+        it('should return true for good coins', () => {
+            Transaction.addToMap(goodNewCoin, transactionMap);
+            Transaction.addToMap(goodStandard, transactionMap);
+
+            assert.ok(Transaction.hasExistingInputs(goodStandard, transactionMap));
+            assert.ok(Transaction.hasExistingInputs(goodNewCoin, transactionMap));
+        });
+
+        it('should return false for good coins', () => {
+            Transaction.addToMap(goodNewCoin, transactionMap);
+            Transaction.addToMap(goodStandard, transactionMap);
+
+            var nonExistingInputs = Transaction.clone(goodStandard);
+            nonExistingInputs.inputs[0] = 'NONEXISTING';
+
+            assert.ok(!Transaction.hasExistingInputs(nonExistingInputs, transactionMap));
+        });
+    });
+
+    describe('#hasOwnedInputs()', () => {
+        it('should return true for good coins', () => {
+            Transaction.addToMap(goodNewCoin, transactionMap);
+
+            assert.ok(Transaction.hasOwnedInputs(goodStandard, transactionMap));
+            assert.ok(Transaction.hasOwnedInputs(goodNewCoin, transactionMap));
+        });
+
+        it('should return false for bad coins', () => {
+            Transaction.addToMap(goodNewCoin, transactionMap);
+
+            var nonOwnedInputs = Transaction.clone(goodStandard);
+            nonOwnedInputs.sender_public_key = 'NOTOWNED';
+
+            assert.ok(!Transaction.hasOwnedInputs(nonOwnedInputs, transactionMap));
+        });
+    });
+
+    describe('#verify()', () => {
+        it('should return true for good coins', () => {
+            assert.ok(Transaction.verify(goodNewCoin, transactionMap, /*TODO test block*/ {}));
+            assert.ok(!Transaction.verify(goodStandard, transactionMap));
+
+            Transaction.addToMap(goodNewCoin, transactionMap);
+            assert.ok(Transaction.verify(goodStandard, transactionMap));
+        });
+    });
 });

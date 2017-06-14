@@ -138,13 +138,14 @@ function verify(transaction, transaction_map, block_context) {
 
     switch(transaction.type) {
         case TYPES.STANDARD:
-            if (getInputValue(transaction) != getOutputValue(transaction))
+            if (getInputValue(transaction, transaction_map) != getOutputValue(transaction, transaction_map))
                 return false;
 
             break;
 
         case TYPES.NEW_COIN:
             if (!block_context) return false;
+            // TODO VERIFICATION FOR THESE
             break;
     }
 
