@@ -11,7 +11,7 @@ function unblock() {
 // Creates a new promise that waits for a number of other promises to all resolve.
 // If any error it rejects on the first error it receives.
 function waitForAll(promises) {
-    return newPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var haveRejected = false;
         var successes = 0;
 
@@ -34,5 +34,6 @@ function waitForAll(promises) {
 }
 
 module.exports = {
-    unblock: unblock
+    unblock: unblock,
+    waitForAll: waitForAll
 }
