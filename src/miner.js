@@ -24,7 +24,7 @@ function miner(port) {
                                   }
                                 }
                                 break;
-          case: "startmining" : mainloop();
+          case "startmining" : mainloop();
         }
     })
 
