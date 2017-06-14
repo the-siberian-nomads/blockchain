@@ -12,6 +12,8 @@ function unblock() {
 // If any error it rejects on the first error it receives.
 function waitForAll(promises) {
     return new Promise((resolve, reject) => {
+        if(promises.length == 0)
+          return resolve();
         var haveRejected = false;
         var successes = 0;
 
