@@ -14,17 +14,20 @@ function miner(port) {
   var server = net.createServer((sock) => {
     sock.on('data',function(data){
         data = JSON.parse(data.toString('utf8'));
-
         switch(data.type) {
-          case "transaction" : pool.add(data); break;
-          case "blockFinished" : let newChain = data.chain;
-                                if(newChain.length > data.chain){
-                                  if(block.getVerificationMetadata(newChain).valid){
-                                    newChain[blockchain.length].map(i => (pool.add(i)));
-                                    blockchain = newChain;
-                                  }
-                                }
-                                break;
+          case "transaction" : pool.add(data.data); break;
+          case "blockFinished" :
+            if(data.chain == null){
+              break;
+            }
+            let newChain = data.chain;
+            if(newChain.length > data.chain){
+              if(block.getVerificationMetadata(newChain).valid){
+                newChain[blockchain.length].map(i => (pool.add(i)));
+                blockchain = newChain;
+              }
+            }
+            break;
           case "startmining" : mainloop();
         }
     })
