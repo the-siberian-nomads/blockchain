@@ -163,7 +163,6 @@ function isFirstNewCoin(transaction, block_context) {
 function verify(transaction, transaction_map, block_context) {
     // Every transaction has to pass these checks universally.
     // TODO validate fields format
-    // TODO checks in map for whether a coin is already used
     if (!hasCorrectFields(transaction)) return false;
     if (!hasValidSignature(transaction)) return false;
     if (hasDuplicateOutputs(transaction)) return false;

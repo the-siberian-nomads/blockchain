@@ -1,4 +1,4 @@
-//block structure
+const Transaction = require('./transaction');
 const sha = require('sha256')
 
 // Creates a block from a hash of a previous block and data.
@@ -47,7 +47,13 @@ function getVerificationMetadata(blocks) {
             return { valid: false };
     }
 
-    return { valid: true };
+    // Check the transaction history is correct.
+    var transaction_metadata = Transaction.getVerificationMetadata(blocks);
+    if (!transaction_metadata.valid)
+        return { valid: false };
+
+    // Returns the transaction map along with the validation.
+    return transaction_metadata;
 }
 
 module.exports = {
