@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/priqb/blockchain#readme",
   "dependencies": {
+    "deepcopy": "^0.6.3",
     "node-rsa": "^0.4.2",
     "promise": "^7.1.1"
   },

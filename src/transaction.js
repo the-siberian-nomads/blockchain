@@ -1,3 +1,4 @@
+var deepcopy = require('deepcopy');
 var NodeRSA = require('node-rsa');
 var assert = require('assert');
 
@@ -37,19 +38,13 @@ function create(sender_public_key, sender_private_key, inputs, outputs, type) {
     }
 
     var key = new NodeRSA(sender_private_key);
-    transaction.signature = key.sign(unencryptedSignature(transaction), 'base64', 'utf8').toString('utf8');
+    transaction.signature = key.sign(unencryptedSignature(transaction), 'base64', 'utf8');
 
     return transaction;
 }
 
 function clone(transaction) {
-    return {
-        sender_public_key: transaction.sender_public_key,
-        inputs: transaction.inputs,
-        outputs: transaction.outputs,
-        type: transaction.type,
-        signature: transaction.signature
-    };
+    return deepcopy(transaction);
 }
 
 function getOutputValue(transaction) {

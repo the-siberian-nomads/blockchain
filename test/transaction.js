@@ -31,6 +31,10 @@ describe('transaction.js', () => {
         );
     }
 
+    var wrongFields = {
+        this: 0, is: 0, not: 0, a: 0, coin: 0
+    }
+
     before(() => {
         initGoodNewCoin();
         initGoodStandard();
@@ -60,7 +64,6 @@ hasOwnedInputs: hasOwnedInputs,**/
         it('should get the correct input value', () => {
             Transaction.addToMap(goodNewCoin, transactionMap);
             Transaction.addToMap(goodStandard, transactionMap);
-            console.log(transactionMap);
 
             assert.equal(1.0, Transaction.getInputValue(goodStandard, transactionMap));
             assert.equal(0.0, Transaction.getInputValue(goodNewCoin, transactionMap));
@@ -73,4 +76,29 @@ hasOwnedInputs: hasOwnedInputs,**/
             assert.equal(1.0, Transaction.getOutputValue(goodNewCoin));
         });
     });
+
+    describe('#hasCorrectFields()', () => {
+        it('should return true for good coins', () => {
+            assert.ok(Transaction.hasCorrectFields(goodStandard));
+            assert.ok(Transaction.hasCorrectFields(goodNewCoin));
+        });
+
+        it('should return false for bad coins', () => {
+            assert.ok(!Transaction.hasCorrectFields(wrongFields));
+        });
+    });
+
+    describe('#hasValidSignature()', () => {
+        it('should return true for good coins', () => {
+            assert.ok(Transaction.hasValidSignature(goodStandard));
+            assert.ok(Transaction.hasValidSignature(goodNewCoin));
+        });
+
+        it ('should return false for bad coins', () => {
+            var badSignature = Transaction.clone(goodStandard);
+            badSignature.signature = goodNewCoin.signature;
+            
+            assert.ok(!Transaction.hasValidSignature(badSignature));
+        });
+    })
 });
