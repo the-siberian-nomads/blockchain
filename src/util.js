@@ -1,19 +1,25 @@
 var Promise = require('promise');
 
+// Creates a promise that delays for some given time.
+function delay(milliseconds) {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
 // Creates a promise wrapper around setTimeout(..., 0) for
 // breaking out of JS main thread.
 function unblock() {
-    return new Promise((resolve, reject) => {
-        setTimeout(resolve, 0);
-    });
+    return delay(0);
 }
 
 // Creates a new promise that waits for a number of other promises to all resolve.
 // If any error it rejects on the first error it receives.
 function waitForAll(promises) {
     return new Promise((resolve, reject) => {
-        if(promises.length == 0)
-          return resolve();
+        if (promises.length == 0)
+            return resolve();
+
         var haveRejected = false;
         var successes = 0;
 
@@ -36,6 +42,7 @@ function waitForAll(promises) {
 }
 
 module.exports = {
+    delay: delay,
     unblock: unblock,
     waitForAll: waitForAll
 }

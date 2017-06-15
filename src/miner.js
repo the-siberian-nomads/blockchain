@@ -1,14 +1,16 @@
-const Transaction = require('./transaction')
-const Promise = require('promise')
-const Block = require('./block')
-const Util = require('./util')
-const net = require('net')
+const Transaction = require('./transaction');
+const Message = require('./message');
+const Promise = require('promise');
+const Block = require('./block');
+const Util = require('./util');
+const net = require('net');
 
 function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.transaction_pool = [];
     this.transaction_map = {};
     this.blockchain = [];
     this.port = port;
+    this.activelyMining = false;
 
     this.miner_public_key = miner_public_key;
     this.miner_private_key = miner_private_key;
@@ -26,36 +28,8 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.main = main.bind(this);
 
     this.server = net.createServer((socket) => {
-        socket.on('data', function(data) {
-            data = JSON.parse(data.toString('utf8'));
-
-            // TODO move these all out to a messages module
-            switch(data.type) {
-                case "broadcast_transaction":
-                    pool.add(data.data);
-                    break;
-
-                case "broadcast_block" :
-                    if (data.chain == null)
-                        break;
-
-                    // let newChain = data.chain;
-                    // if(newChain.length > data.chain){
-                    //     if(block.getVerificationMetadata(newChain).valid){
-                    //         newChain[blockchain.length].map(i => (pool.add(i)));
-                    //         blockchain = newChain;
-                    //     }
-                    // }
-
-                    break;
-                case "start_mining":
-                    break;
-            }
-        })
-
-        sock.on('close', function(data) {
-            console.log("Socket closed.")
-        })
+        socket.on('data', Message.handler(this));
+        socket.on('close', () => console.log("Connection closed."));
     });
 }
 
@@ -127,7 +101,11 @@ function pushNewBlock() {
 }
 
 // Run hash computation as part of the traditional bitcoin mining operation.
-function computeHash(){
+function computeHash() {
+    // If we aren't mining we delay to keep CPU usage down.
+    if (!this.activelyMining)
+        return Util.delay(100);
+
     return new Promise((resolve, reject) => {
         this.latestBlock().nonce++;
 
