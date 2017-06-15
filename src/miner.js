@@ -80,7 +80,11 @@ function flushTransaction(transaction) {
     return Util
         .unblock()
         .then(() => {
-            if (Transaction.verify(transaction, this.transaction_map, this.latestBlock())) {
+            this.latestBlock().data.push(transaction);
+            let valid = Transaction.verify(transaction, this.transaction_map, this.latestBlock());
+            this.latestBlock().data.pop();
+
+            if (valid) {
                 // TODO this should be moved to Block.addTransaction.
                 Transaction.addToMap(transaction, this.transaction_map);
 
@@ -206,7 +210,6 @@ function computeHash() {
             return resolve()
         }
     });
-
 }
 
 // Main miner loop - constantly running.

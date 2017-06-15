@@ -56,8 +56,8 @@ function getVerificationMetadata(blocks) {
 }
 
 module.exports = {
-    toString : toString,
     create: create,
+    toString : toString,
     createFrom: createFrom,
     computeHash: computeHash,
     addTransaction: addTransaction,

@@ -160,6 +160,8 @@ function isFirstNewCoin(transaction, block_context) {
 }
 
 // Given a map of transaction signatures to transactions, verify the given transaction is valid.
+// The transaction MUST be present in the block_context already, or slightly strange results may
+// occur when verifying new coin transactions.
 function verify(transaction, transaction_map, block_context) {
     // Every transaction has to pass these checks universally.
     // TODO validate fields format
