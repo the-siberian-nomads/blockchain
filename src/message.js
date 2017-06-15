@@ -11,9 +11,12 @@ const TYPES = {
 const handlers = {
     [TYPES.BROADCAST_TRANSACTION]: handleBroadcastTransaction,
     [TYPES.BROADCAST_BLOCK]: handleBroadcastBlock,
+    [TYPES.BROADCAST_NODES]: handleBroadcastNodes,
     [TYPES.START_MINING]: handleStartMining,
-    [TYPES.STOP_MINING]: handleStopMining
+    [TYPES.STOP_MINING]: handleStopMining,
+    [TYPES.REQUEST_NODES]: handleRequestNodes
 }
+
 
 function messageHandler(miner, socket) {
     return (message) => {
@@ -37,6 +40,10 @@ function handleBroadcastBlock(message, miner) {
     console.log("Got broadcast block.");
 }
 
+function handleBroadcastNodes(message,miner){
+    miner.addNodes(message.data);
+}
+
 function handleStartMining(message, miner) {
     // TODO need to run auth here with digital signature
     miner.activelyMining = true;
@@ -45,6 +52,13 @@ function handleStartMining(message, miner) {
 function handleStopMining(message, miner) {
     // TODO need to run auth here with digital signature
     miner.activelyMining = false;
+}
+
+function handleRequestNodes(message, miner, socket){
+    socket.write(JSON.stringify({
+        message.type : TYPES.REQUEST_NODES,
+        message.data: miner.node_list
+    }));
 }
 
 module.exports = {
