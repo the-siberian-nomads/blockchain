@@ -18,7 +18,8 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.owner_public_key = owner_public_key;
 
     this.flushTransactionPool = flushTransactionPool.bind(this);
-    this.addTransaction = addTransaction.bind(this);
+    this.addTransactionToPool = addTransactionToPool.bind(this);
+    this.flushTransaction = flushTransaction.bind(this);
     this.createGenesisBlock = createGenesisBlock.bind(this);
     this.createGenesisIfNeeded = createGenesisIfNeeded.bind(this);
     this.createNewCoin = createNewCoin.bind(this);
@@ -62,13 +63,13 @@ function addNodes(nodes) {
 
 // Add all valid transactions to blockchain, clear the transaction pool.
 function flushTransactionPool() {
-    var transaction_promises = this.transaction_pool.map(this.addTransaction);
+    var transaction_promises = this.transaction_pool.map(this.flushTransaction);
 
     this.transaction_pool = [];
     return Util.waitForAll(transaction_promises);
 }
 
-function addTransaction(transaction) {
+function flushTransaction(transaction) {
     return Util
         .unblock()
         .then(() => {
@@ -113,11 +114,16 @@ function latestBlock() {
     return this.blockchain[ this.blockchain.length - 1 ];
 }
 
+// Add a transaction into the transaction pool.
+function addTransactionToPool(transaction) {
+    this.transaction_pool.push(transaction);
+}
+
 // Add a new block onto the end of the current chain and push a new coin into it.
 function pushNewBlock() {
     this.blockchain.push( Block.createFrom(this.latestBlock()) );
 
-    this.transaction_pool.push( this.createNewCoin() );
+    this.addTransactionToPool( this.createNewCoin() );
 }
 
 // Run hash computation as part of the traditional bitcoin mining operation.
