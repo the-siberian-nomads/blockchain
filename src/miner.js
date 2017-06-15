@@ -9,6 +9,7 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.transaction_pool = [];
     this.transaction_map = {};
     this.blockchain = [];
+    this.node_list = [];
     this.port = port;
     this.activelyMining = false;
 
@@ -24,6 +25,7 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.latestBlock = latestBlock.bind(this);
     this.pushNewBlock = pushNewBlock.bind(this);
     this.computeHash = computeHash.bind(this);
+    this.addNodes = addNodes.bind(this);
     this.start = start.bind(this);
     this.main = main.bind(this);
 
@@ -38,6 +40,24 @@ function start() {
     this.server.listen(this.port, '127.0.0.1');
 
     this.main();
+}
+
+// Add new nodes to the node list.
+function addNodes(nodes) {
+    nodes.forEach((node) => {
+        var already_in_list = false;
+
+        this.node_list.forEach((our_node) => {
+            if (node.address == our_node.address && node.port == our_node.port)
+                already_in_list = true;
+        });
+
+        if (!already_in_list)
+            this.node_list.push(node);
+    });
+
+    console.log("Added nodes: ");
+    console.log(this.node_list);
 }
 
 // Add all valid transactions to blockchain, clear the transaction pool.

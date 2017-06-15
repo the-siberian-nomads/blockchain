@@ -4,6 +4,8 @@ const Block = require('./block')
 const TYPES = {
     BROADCAST_TRANSACTION: "BROADCAST_TRANSACTION",
     BROADCAST_BLOCK: "BROADCAST_BLOCK",
+    BROADCAST_NODES: "BROADCAST_NODES",
+    REQUEST_NODES: "REQUEST_NODES",
     START_MINING: "START_MINING",
     STOP_MINING: "STOP_MINING"
 }
@@ -12,9 +14,9 @@ const handlers = {
     [TYPES.BROADCAST_TRANSACTION]: handleBroadcastTransaction,
     [TYPES.BROADCAST_BLOCK]: handleBroadcastBlock,
     [TYPES.BROADCAST_NODES]: handleBroadcastNodes,
+    [TYPES.REQUEST_NODES]: handleRequestNodes,
     [TYPES.START_MINING]: handleStartMining,
-    [TYPES.STOP_MINING]: handleStopMining,
-    [TYPES.REQUEST_NODES]: handleRequestNodes
+    [TYPES.STOP_MINING]: handleStopMining
 }
 
 
@@ -55,10 +57,12 @@ function handleStopMining(message, miner) {
 }
 
 function handleRequestNodes(message, miner, socket){
-    socket.write(JSON.stringify({
-        message.type : TYPES.REQUEST_NODES,
-        message.data: miner.node_list
-    }));
+    socket.write(
+        JSON.stringify({
+            type: TYPES.REQUEST_NODES,
+            data: miner.node_list
+        })
+    );
 }
 
 module.exports = {
