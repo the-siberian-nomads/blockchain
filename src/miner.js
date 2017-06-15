@@ -43,7 +43,7 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
 
 // Start up the miner's main loop and TCP server.
 function start() {
-    this.server.listen(this.port, '10.0.0.14');
+    this.server.listen(this.port, '10.0.0.12');
     this.server.on('error', (error) => console.error(error));
 
     this.main();
@@ -158,6 +158,13 @@ function computeHash() {
         if (Block.computeHash(this.latestBlock()).startsWith("000")) {
             // TODO broadcast the new block.
 
+            this.node_list.map(i => {
+                var client = net.createConnection(i.port,i.address, () => {
+                    console.log("send blockchain to " + i.address);
+                    Message.exportBlocks(this,client);
+                    client.end();
+                })
+            })
             this.pushNewBlock();
 
             console.log("Current state of chain:");

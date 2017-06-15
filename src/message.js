@@ -61,6 +61,16 @@ function handleRequestNodes(message, miner, socket){
     );
 }
 
+function exportBlocks(miner,socket){
+    socket.write(
+        JSON.stringify({
+            type: TYPES.BROADCAST_BLOCKCHAIN,
+            data: miner.blockchain
+        })
+    )
+}
+
 module.exports = {
-    handler: messageHandler
+    handler: messageHandler,
+    exportBlocks: exportBlocks
 }
