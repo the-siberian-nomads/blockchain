@@ -16,7 +16,7 @@ function createFrom(block, data, nonce) {
 }
 
 function toString(block) {
-    return block.hash + " : " + block.data.length + " transactions : " + block.nonce;
+    return block.hash + ' '.repeat(64 - block.hash.length) + " : " + block.data.length + " transactions : " + block.nonce;
 }
 
 // Push a transaction to the block's transaction chain.

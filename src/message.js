@@ -44,12 +44,12 @@ function handleBroadcastNodes(message,miner){
 
 function handleStartMining(message, miner) {
     // TODO need to run auth here with digital signature
-    miner.activelyMining = true;
+    miner.actively_mining = true;
 }
 
 function handleStopMining(message, miner) {
     // TODO need to run auth here with digital signature
-    miner.activelyMining = false;
+    miner.actively_mining = false;
 }
 
 function handleRequestNodes(message, miner, socket){
@@ -61,13 +61,15 @@ function handleRequestNodes(message, miner, socket){
     );
 }
 
-function exportBlocks(miner,socket){
+function exportBlocks(miner, socket, callback) {
     socket.write(
         JSON.stringify({
             type: TYPES.BROADCAST_BLOCKCHAIN,
             data: miner.blockchain
-        })
-    )
+        }),
+        'utf8',
+        callback
+    );
 }
 
 module.exports = {

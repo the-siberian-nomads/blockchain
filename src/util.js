@@ -1,4 +1,5 @@
 var Promise = require('promise');
+var fs = require('fs');
 
 // Creates a promise that delays for some given time.
 function delay(milliseconds) {
@@ -41,8 +42,21 @@ function waitForAll(promises) {
     });
 }
 
+// Logger that logs strings to a given file path with timestamps.
+function createLog(path, mode) {
+    var mode = mode || 'w';
+    var file = fs.openSync(path, mode);
+
+    return {
+        log: (message) => {
+            fs.writeSync(file, '[' + (new Date().toString()) + '] ' + (message || '') + '\n');
+        }
+    };
+}
+
 module.exports = {
     delay: delay,
     unblock: unblock,
-    waitForAll: waitForAll
+    waitForAll: waitForAll,
+    createLog: createLog
 }
