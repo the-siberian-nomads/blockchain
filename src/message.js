@@ -15,7 +15,7 @@ const handlers = {
     [TYPES.STOP_MINING]: handleStopMining
 }
 
-function messageHandler(miner) {
+function messageHandler(miner, socket) {
     return (message) => {
         message = JSON.parse(message.toString('utf8'));
 
@@ -25,7 +25,7 @@ function messageHandler(miner) {
         if (!handlers[message.type])
             return console.error("Message received with unknown type attribute " + message.type + " - ignoring.");
 
-        return handlers[message.type](message, miner);
+        return handlers[message.type](message, miner, socket);
     }
 }
 

@@ -28,7 +28,7 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.main = main.bind(this);
 
     this.server = net.createServer((socket) => {
-        socket.on('data', Message.handler(this));
+        socket.on('data', Message.handler(this, socket));
         socket.on('close', () => console.log("Connection closed."));
     });
 }
@@ -115,7 +115,7 @@ function computeHash() {
             this.pushNewBlock();
 
             console.log("Current state of chain:");
-            console.log(this.blockchain.map(Block.toString).join('\n'));
+            console.log('  ' + this.blockchain.map(Block.toString).join('\n  '));
             console.log("Is chain valid: " + Block.getVerificationMetadata(this.blockchain).valid);
             console.log();
         }
