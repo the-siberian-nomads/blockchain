@@ -31,15 +31,20 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.start = start.bind(this);
     this.main = main.bind(this);
 
+    // TODO use stream-json and move to a streaming model for message handling
     this.server = net.createServer((socket) => {
-        socket.on('data', Message.handler(this, socket));
-        socket.on('close', () => console.log("Connection closed."));
+        var message = '';
+
+        // socket.on('data', Message.handler(this, socket));
+        socket.on('data', (chunk) => message += chunk.toString('utf8'));
+        socket.on('close', () => Message.handler(JSON.parse(message), this, socket));
     });
 }
 
 // Start up the miner's main loop and TCP server.
 function start() {
-    this.server.listen(this.port, '127.0.0.1');
+    this.server.listen(this.port, '10.0.0.14');
+    this.server.on('error', (error) => console.error(error));
 
     this.main();
 }

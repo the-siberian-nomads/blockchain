@@ -20,18 +20,14 @@ const handlers = {
 }
 
 
-function messageHandler(miner, socket) {
-    return (message) => {
-        message = JSON.parse(message.toString('utf8'));
+function messageHandler(message, miner, socket) {
+    if (!message.type)
+        return console.error("Message received without type attribute - ignoring.");
 
-        if (!message.type)
-            return console.error("Message received without type attribute - ignoring.");
+    if (!handlers[message.type])
+        return console.error("Message received with unknown type attribute " + message.type + " - ignoring.");
 
-        if (!handlers[message.type])
-            return console.error("Message received with unknown type attribute " + message.type + " - ignoring.");
-
-        return handlers[message.type](message, miner, socket);
-    }
+    return handlers[message.type](message, miner, socket);
 }
 
 function handleBroadcastTransaction(message, miner) {
