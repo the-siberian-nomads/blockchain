@@ -20,6 +20,7 @@ function Miner(port, miner_public_key, miner_private_key, owner_public_key) {
     this.flushTransactionPool = flushTransactionPool.bind(this);
     this.addTransactionToPool = addTransactionToPool.bind(this);
     this.flushTransaction = flushTransaction.bind(this);
+    this.receiveNewBlockchain = receiveNewBlockchain.bind(this);
     this.createGenesisBlock = createGenesisBlock.bind(this);
     this.createGenesisIfNeeded = createGenesisIfNeeded.bind(this);
     this.createNewCoin = createNewCoin.bind(this);
@@ -56,9 +57,6 @@ function addNodes(nodes) {
         if (!already_in_list)
             this.node_list.push(node);
     });
-
-    console.log("Added nodes: ");
-    console.log(this.node_list);
 }
 
 // Add all valid transactions to blockchain, clear the transaction pool.
@@ -69,6 +67,7 @@ function flushTransactionPool() {
     return Util.waitForAll(transaction_promises);
 }
 
+// Flush the entire transaction pool into the current block.
 function flushTransaction(transaction) {
     return Util
         .unblock()
@@ -124,6 +123,22 @@ function pushNewBlock() {
     this.blockchain.push( Block.createFrom(this.latestBlock()) );
 
     this.addTransactionToPool( this.createNewCoin() );
+}
+
+// Receive and consider a new blockchain as part of a broadcast.
+function receiveNewBlockchain(blockchain) {
+    if (blockchain.length > this.blockchain.length) {
+        var verificationMetadata = Block.getVerificationMetadata(blockchain);
+
+        if (verificationMetadata.valid) {
+            this.latestBlock().data.map((transaction) => addTransactionToPool(transaction));
+
+            this.blockchain = blockchain;
+            this.transaction_map = verificationMetadata.transaction_map;
+
+            this.pushNewBlock();
+        }
+    }
 }
 
 // Run hash computation as part of the traditional bitcoin mining operation.

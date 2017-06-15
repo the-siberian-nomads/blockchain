@@ -3,7 +3,7 @@ const Block = require('./block')
 
 const TYPES = {
     BROADCAST_TRANSACTION: "BROADCAST_TRANSACTION",
-    BROADCAST_BLOCK: "BROADCAST_BLOCK",
+    BROADCAST_BLOCKCHAIN: "BROADCAST_BLOCKCHAIN",
     BROADCAST_NODES: "BROADCAST_NODES",
     REQUEST_NODES: "REQUEST_NODES",
     START_MINING: "START_MINING",
@@ -12,7 +12,7 @@ const TYPES = {
 
 const handlers = {
     [TYPES.BROADCAST_TRANSACTION]: handleBroadcastTransaction,
-    [TYPES.BROADCAST_BLOCK]: handleBroadcastBlock,
+    [TYPES.BROADCAST_BLOCKCHAIN]: handleBroadcastBlockchain,
     [TYPES.BROADCAST_NODES]: handleBroadcastNodes,
     [TYPES.REQUEST_NODES]: handleRequestNodes,
     [TYPES.START_MINING]: handleStartMining,
@@ -35,11 +35,11 @@ function messageHandler(miner, socket) {
 }
 
 function handleBroadcastTransaction(message, miner) {
-    console.log("Got broadcast transaction.");
+    miner.addTransactionToPool(message.data);
 }
 
-function handleBroadcastBlock(message, miner) {
-    console.log("Got broadcast block.");
+function handleBroadcastBlockchain(message, miner) {
+    miner.receiveNewBlockchain(message.data);
 }
 
 function handleBroadcastNodes(message,miner){
