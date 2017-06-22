@@ -1,6 +1,6 @@
 {
   "name": "blockchain",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "our first implementation of blockchain",
   "main": "index.js",
   "scripts": {
@@ -8,19 +8,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/priqb/blockchain.git"
+    "url": "git+https://github.com/the-siberian-nomads/blockchain.git"
   },
   "author": "priQB, noGju",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/priqb/blockchain/issues"
+    "url": "https://github.com/the-siberian-nomads/blockchain/issues"
   },
-  "homepage": "https://github.com/priqb/blockchain#readme",
+  "homepage": "https://github.com/the-siberian-nomads/blockchain#readme",
   "dependencies": {
-    "deepcopy": "^0.6.3",
-    "node-rsa": "^0.4.2",
-    "promise": "^7.1.1",
-    "sha256": "^0.2.0"
+      "transactionblockchain": "^1.0.3",
+      "blockblockchain": "^1.0.1",
+      "promise": "^7.1.1"
   },
   "devDependencies": {
     "mocha": "^3.4.2"

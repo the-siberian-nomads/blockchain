@@ -1,7 +1,7 @@
-const Transaction = require('./transaction');
 const Message = require('./message');
 const Promise = require('promise');
-const Block = require('./block');
+const Transaction = require('transactionblockchain');
+const Block = require('blockblockchain');
 const Util = require('./util');
 const net = require('net');
 

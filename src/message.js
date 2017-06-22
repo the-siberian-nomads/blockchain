@@ -1,5 +1,5 @@
-const Transaction = require('./transaction')
-const Block = require('./block')
+const Transaction = require('transactionblockchain')
+const Block = require('blockblockchain')
 
 const TYPES = {
     BROADCAST_TRANSACTION: "BROADCAST_TRANSACTION",
